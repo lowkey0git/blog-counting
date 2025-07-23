@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productivity Tracker</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.3/cdn.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #4A5568;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 1.1rem;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 15px 20px;
+            background: transparent;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .nav-tab:hover:not(.active) {
+            background: rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4A5568;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #E2E8F0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: white;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #4FD1C7 0%, #06B6D4 100%);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 209, 199, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #F56565 0%, #E53E3E 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(245, 101, 101, 0.3);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+            padding: 25px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .stat-card .icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2D3748;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .label {
+            color: #718096;
+            font-weight: 500;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        .table th,
+        .table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #E2E8F0;
+        }
+
+        .table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        .table tbody tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-excellent { background: #C6F6D5; color: #22543D; }
+        .badge-good { background: #BEE3F8; color: #2C5282; }
+        .badge-average { background: #FED7D7; color: #C53030; }
+        .badge-poor { background: #FEEBC8; color: #C05621; }
+
+        .analysis-card {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 16px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+
+        .analysis-card h3 {
+            color: #4A5568;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .recommendations {
+            list-style: none;
+            padding: 0;
+        }
+
+        .recommendations li {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .loading {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #E2E8F0;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-success {
+            background: #C6F6D5;
+            color: #22543D;
+            border: 1px solid #9AE6B4;
+        }
+
+        .alert-error {
+            background: #FED7D7;
+            color: #C53030;
+            border: 1px solid #FEB2B2;
+        }
+
+        .hidden { display: none !important; }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 768px) {
+            .nav-tabs {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 10px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" x-data="productivityTracker()">
+        <!-- Header -->
+        <header class="header">
+            <h1><i class="fas fa-chart-line"></i> Productivity Tracker</h1>
+            <p>Track work hours, analyze productivity, and get AI-powered insights</p>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav-tabs">
+            <button class="nav-tab" :class="{ active: activeTab === 'dashboard' }" @click="activeTab = 'dashboard'">
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+            </button>
+            <button class="nav-tab" :class="{ active: activeTab === 'add-record' }" @click="activeTab = 'add-record'">
+                <i class="fas fa-plus-circle"></i> Add Record
+            </button>
+            <button class="nav-tab" :class="{ active: activeTab === 'records' }" @click="activeTab = 'records'">
+                <i class="fas fa-list"></i> Work Records
+            </button>
+            <button class="nav-tab" :class="{ active: activeTab === 'analytics' }" @click="activeTab = 'analytics'">
+                <i class="fas fa-brain"></i> Analytics
+            </button>
+        </nav>
+
+        <!-- Alerts -->
+        <div x-show="alert.show" class="alert" :class="alert.type === 'success' ? 'alert-success' : 'alert-error'">
+            <i :class="alert.type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'"></i>
+            <span x-text="alert.message"></span>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div x-show="activeTab === 'dashboard'" class="card">
+            <h2><i class="fas fa-chart-bar"></i> Dashboard Overview</h2>
+
+            <div class="stats-grid" x-show="stats">
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-file-alt"></i></div>
+                    <div class="value" x-text="stats?.total_records || 0"></div>
+                    <div class="label">Total Records</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-users"></i></div>
+                    <div class="value" x-text="stats?.unique_workers || 0"></div>
+                    <div class="label">Unique Workers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-clock"></i></div>
+                    <div class="value" x-text="stats?.total_hours || 0"></div>
+                    <div class="label">Total Hours</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-star"></i></div>
+                    <div class="value" x-text="stats?.avg_productivity || 0"></div>
+                    <div class="label">Avg Productivity</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="productivityChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Add Record Tab -->
+        <div x-show="activeTab === 'add-record'" class="card">
+            <h2><i class="fas fa-plus-circle"></i> Add Work Record</h2>
+
+            <form @submit.prevent="addRecord()">
+                <div class="form-group">
+                    <label for="worker_name">Worker Name</label>
+                    <input type="text" id="worker_name" class="form-control" x-model="newRecord.worker_name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="date">Date</label>
+                    <input type="date" id="date" class="form-control" x-model="newRecord.date" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="hours_worked">Hours Worked</label>
+                    <input type="number" id="hours_worked" class="form-control" x-model="newRecord.hours_worked"
+                           min="0" max="24" step="0.5" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="tasks_completed">Tasks Completed</label>
+                    <input type="number" id="tasks_completed" class="form-control" x-model="newRecord.tasks_completed"
+                           min="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="productivity_score">Productivity Score (1-10)</label>
+                    <input type="number" id="productivity_score" class="form-control" x-model="newRecord.productivity_score"
+                           min="1" max="10" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">Notes (Optional)</label>
+                    <textarea id="notes" class="form-control" x-model="newRecord.notes" rows="3"></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary" :disabled="loading">
+                    <span x-show="!loading">
+                        <i class="fas fa-save"></i> Save Record
+                    </span>
+                    <span x-show="loading" class="loading">
+                        <div class="spinner"></div> Saving...
+                    </span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Records Tab -->
+        <div x-show="activeTab === 'records'" class="card">
+            <h2><i class="fas fa-list"></i> Work Records</h2>
+
+            <div class="table-container" x-show="records.length > 0">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Worker</th>
+                            <th>Date</th>
+                            <th>Hours</th>
+                            <th>Tasks</th>
+                            <th>Productivity</th>
+                            <th>Notes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="record in records" :key="record.id">
+                            <tr>
+                                <td x-text="record.worker_name"></td>
+                                <td x-text="formatDate(record.date)"></td>
+                                <td x-text="record.hours_worked"></td>
+                                <td x-text="record.tasks_completed"></td>
+                                <td>
+                                    <span class="badge" :class="getProductivityBadge(record.productivity_score)"
+                                          x-text="record.productivity_score + '/10'"></span>
+                                </td>
+                                <td x-text="record.notes || '-'"></td>
+                                <td>
+                                    <button class="btn btn-danger" @click="deleteRecord(record.id)">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+
+            <div x-show="records.length === 0" class="text-center" style="padding: 40px; color: #718096;">
+                <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.5;"></i>
+                <p>No records found. Add your first work record to get started!</p>
+            </div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div x-show="activeTab === 'analytics'" class="card">
+            <h2><i class="fas fa-brain"></i> Productivity Analytics</h2>
+
+            <div x-show="records.length > 0">
+                <div class="chart-container">
+                    <canvas id="analyticsChart"></canvas>
+                </div>
+
+                <div class="analysis-card" x-show="analysis">
+                    <h3><i class="fas fa-lightbulb"></i> AI Insights & Recommendations</h3>
+                    <ul class="recommendations">
+                        <template x-for="recommendation in analysis.recommendations" :key="recommendation">
+                            <li>
+                                <i class="fas fa-arrow-right"></i>
+                                <span x-text="recommendation"></span>
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+
+                <button class="btn btn-secondary" @click="generateAnalysis()" :disabled="loading">
+                    <span x-show="!loading">
+                        <i class="fas fa-sync-alt"></i> Refresh Analysis
+                    </span>
+                    <span x-show="loading" class="loading">
+                        <div class="spinner"></div> Analyzing...
+                    </span>
+                </button>
+            </div>
+
+            <div x-show="records.length === 0" class="text-center" style="padding: 40px; color: #718096;">
+                <i class="fas fa-chart-line" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.5;"></i>
+                <p>Add some work records to see productivity analytics and insights!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function productivityTracker() {
+            return {
+                activeTab: 'dashboard',
+                loading: false,
+                alert: {
+                    show: false,
+                    type: 'success',
+                    message: ''
+                },
+                newRecord: {
+                    worker_name: '',
+                    date: new Date().toISOString().split('T')[0],
+                    hours_worked: '',
+                    tasks_completed: '',
+                    productivity_score: '',
+                    notes: ''
+                },
+                records: [],
+                stats: null,
+                analysis: null,
+                charts: {},
+
+                init() {
+                    this.loadData();
+                    this.calculateStats();
+                    this.generateAnalysis();
+                    this.$nextTick(() => {
+                        this.initDashboardChart();
+                        this.initAnalyticsChart();
+                    });
+                },
+
+                loadData() {
+                    // Load from local storage or initialize with sample data
+                    const savedRecords = JSON.parse(window.localStorage?.getItem('productivity_records') || '[]');
+                    if (savedRecords.length === 0) {
+                        this.records = this.getSampleData();
+                        this.saveData();
+                    } else {
+                        this.records = savedRecords;
+                    }
+                },
+
+                saveData() {
+                    if (window.localStorage) {
+                        window.localStorage.setItem('productivity_records', JSON.stringify(this.records));
+                    }
+                },
+
+                getSampleData() {
+                    return [
+                        {
+                            id: 1,
+                            worker_name: 'John Doe',
+                            date: '2024-01-15',
+                            hours_worked: 8,
+                            tasks_completed: 5,
+                            productivity_score: 8,
+                            notes: 'Great day, completed all priority tasks'
+                        },
+                        {
+                            id: 2,
+                            worker_name: 'Jane Smith',
+                            date: '2024-01-15',
+                            hours_worked: 7.5,
+                            tasks_completed: 4,
+                            productivity_score: 7,
+                            notes: 'Good progress on project deliverables'
+                        },
+                        {
+                            id: 3,
+                            worker_name: 'John Doe',
+                            date: '2024-01-16',
+                            hours_worked: 6,
+                            tasks_completed: 3,
+                            productivity_score: 6,
+                            notes: 'Some interruptions, but stayed focused'
+                        }
+                    ];
+                },
+
+                addRecord() {
+                    this.loading = true;
+
+                    setTimeout(() => {
+                        const record = {
+                            id: Date.now(),
+                            ...this.newRecord,
+                            hours_worked: parseFloat(this.newRecord.hours_worked),
+                            tasks_completed: parseInt(this.newRecord.tasks_completed),
+                            productivity_score: parseInt(this.newRecord.productivity_score)
+                        };
+
+                        this.records.push(record);
+                        this.saveData();
+                        this.calculateStats();
+                        this.generateAnalysis();
+                        this.updateCharts();
+
+                        this.newRecord = {
+                            worker_name: '',
+                            date: new Date().toISOString().split('T')[0],
+                            hours_worked: '',
+                            tasks_completed: '',
+                            productivity_score: '',
+                            notes: ''
+                        };
+
+                        this.showAlert('success', 'Record added successfully!');
+                        this.loading = false;
+                    }, 1000);
+                },
+
+                deleteRecord(id) {
+                    if (confirm('Are you sure you want to delete this record?')) {
+                        this.records = this.records.filter(r => r.id !== id);
+                        this.saveData();
+                        this.calculateStats();
+                        this.generateAnalysis();
+                        this.updateCharts();
+                        this.showAlert('success', 'Record deleted successfully!');
+                    }
+                },
+
+                calculateStats() {
+                    if (this.records.length === 0) {
+                        this.stats = null;
+                        return;
+                    }
+
+                    const totalRecords = this.records.length;
+                    const uniqueWorkers = [...new Set(this.records.map(r => r.worker_name))].length;
+                    const totalHours = this.records.reduce((sum, r) => sum + r.hours_worked, 0);
+                    const avgProductivity = (this.records.reduce((sum, r) => sum + r.productivity_score, 0) / totalRecords).toFixed(1);
+
+                    this.stats = {
+                        total_records: totalRecords,
+                        unique_workers: uniqueWorkers,
+                        total_hours: totalHours.toFixed(1),
+                        avg_productivity: avgProductivity
+                    };
+                },
+
+                generateAnalysis() {
+                    if (this.records.length === 0) {
+                        this.analysis = null;
+                        return;
+                    }
+
+                    this.loading = true;
+
+                    setTimeout(() => {
+                        const recommendations = [];
+                        const avgProductivity = this.records.reduce((sum, r) => sum + r.productivity_score, 0) / this.records.length;
+                        const avgHours = this.records.reduce((sum, r) => sum + r.hours_worked, 0) / this.records.length;
+
+                        if (avgProductivity < 6) {
+                            recommendations.push('Consider identifying and addressing productivity barriers');
+                            recommendations.push('Implement time management techniques like Pomodoro method');
+                        } else if (avgProductivity > 8) {
+                            recommendations.push('Excellent productivity! Consider mentoring others');
+                            recommendations.push('Maintain current work strategies and habits');
+                        }
+
+                        if (avgHours > 8) {
+                            recommendations.push('Monitor work-life balance to prevent burnout');
+                            recommendations.push('Consider delegating tasks when possible');
+                        }
+
+                        if (avgHours < 6) {
+                            recommendations.push('Evaluate if more time allocation is needed for tasks');
+                        }
+
+                        recommendations.push('Regular productivity reviews help maintain consistent performance');
+                        recommendations.push('Set daily goals and track completion rates');
+
+                        this.analysis = { recommendations };
+                        this.loading = false;
+                    }, 1500);
+                },
+
+                initDashboardChart() {
+                    const ctx = document.getElementById('productivityChart');
+                    if (!ctx || this.records.length === 0) return;
+
+                    const dailyData = this.records.reduce((acc, record) => {
+                        const date = record.date;
+                        if (!acc[date]) {
+                            acc[date] = { productivity: 0, hours: 0, count: 0 };
+                        }
+                        acc[date].productivity += record.productivity_score;
+                        acc[date].hours += record.hours_worked;
+                        acc[date].count += 1;
+                        return acc;
+                    }, {});
+
+                    const labels = Object.keys(dailyData).sort();
+                    const productivityData = labels.map(date => (dailyData[date].productivity / dailyData[date].count).toFixed(1));
+                    const hoursData = labels.map(date => dailyData[date].hours.toFixed(1));
+
+                    if (this.charts.dashboard) {
+                        this.charts.dashboard.destroy();
+                    }
+
+                    this.charts.dashboard = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels.map(date => this.formatDate(date)),
+                            datasets: [{
+                                label: 'Productivity Score',
+                                data: productivityData,
+                                borderColor: '#667eea',
+                                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                                tension: 0.4,
+                                yAxisID: 'y'
+                            }, {
+                                label: 'Hours Worked',
+                                data: hoursData,
+                                borderColor: '#764ba2',
+                                backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                                tension: 0.4,
+                                yAxisID: 'y1'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Daily Productivity & Hours Trend'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'left',
+                                    title: {
+                                        display: true,
+                                        text: 'Productivity Score'
+                                    }
+                                },
+                                y1: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'right',
+                                    title: {
+                                        display: true,
+                                        text: 'Hours Worked'
+                                    },
+                                    grid: {
+                                        drawOnChartArea: false,
+                                    },
+                                }
+                            }
+                        }
+                    });
+                },
+
+                initAnalyticsChart() {
+                    const ctx = document.getElementById('analyticsChart');
+                    if (!ctx || this.records.length === 0) return;
+
+                    const workerData = this.records.reduce((acc, record) => {
+                        if (!acc[record.worker_name]) {
+                            acc[record.worker_name] = { productivity: 0, hours: 0, count: 0 };
+                        }
+                        acc[record.worker_name].productivity += record.productivity_score;
+                        acc[record.worker_name].hours += record.hours_worked;
+                        acc[record.worker_name].count += 1;
+                        return acc;
+                    }, {});
+
+                    const labels = Object.keys(workerData);
+                    const avgProductivity = labels.map(worker => (workerData[worker].productivity / workerData[worker].count).toFixed(1));
+                    const totalHours = labels.map(worker => workerData[worker].hours.toFixed(1));
+
+                    if (this.charts.analytics) {
+                        this.charts.analytics.destroy();
+                    }
+
+                    this.charts.analytics = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Average Productivity',
+                                data: avgProductivity,
+                                backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                                borderColor: '#667eea',
+                                borderWidth: 2,
+                                yAxisID: 'y'
+                            }, {
+                                label: 'Total Hours',
+                                data: totalHours,
+                                backgroundColor: 'rgba(118, 75, 162, 0.8)',
+                                borderColor: '#764ba2',
+                                borderWidth: 2,
+                                yAxisID: 'y1'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Worker Performance Analysis'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'left',
+                                    title: {
+                                        display: true,
+                                        text: 'Average Productivity Score'
+                                    },
+                                    min: 0,
+                                    max: 10
+                                },
+                                y1: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'right',
+                                    title: {
+                                        display: true,
+                                        text: 'Total Hours'
+                                    },
+                                    grid: {
+                                        drawOnChartArea: false,
+                                    },
+                                }
+                            }
+                        }
+                    });
+                },
+
+                updateCharts() {
+                    this.$nextTick(() => {
+                        this.initDashboardChart();
+                        this.initAnalyticsChart();
+                    });
+                },
+
+                showAlert(type, message) {
+                    this.alert = { show: true, type, message };
+                    setTimeout(() => {
+                        this.alert.show = false;
+                    }, 3000);
+                },
+
+                formatDate(dateString) {
+                    const date = new Date(dateString);
+                    return date.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                },
+
+                getProductivityBadge(score) {
+                    if (score >= 9) return 'badge-excellent';
+                    if (score >= 7) return 'badge-good';
+                    if (score >= 5) return 'badge-average';
+                    return 'badge-poor';
+                }
+            }
+        }
+    </script>
+</body>
+</html>
