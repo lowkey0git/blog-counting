@@ -1,0 +1,104 @@
+
+# ===============================================
+# app/main.py (Database Models)
+# ===============================================
+from sqlalchemy import Column, Integer, String, DateTime, Date, Time, Float, Text, Boolean
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.sql import func
+from datetime import datetime, date
+
+Base = declarative_base()
+
+
+class WorkRecord(Base):
+    __tablename__ = "work_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    worker_name = Column(String(100), nullable=False, index=True)
+    work_date = Column(Date, nullable=False, index=True)
+    start_time = Column(DateTime, nullable=True)
+    end_time = Column(DateTime, nullable=True)
+    hours_worked = Column(Float, nullable=False)
+    tasks_completed = Column(Integer, default=0)
+    blog_posts_count = Column(Integer, default=0)
+    productivity_score = Column(Integer, nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    def __repr__(self):
+        return f"<WorkRecord(id={self.id}, worker='{self.worker_name}', date='{self.work_date}')>"
+
+    def calculate_work_duration_hours(self):
+        """Calculate work duration in hours"""
+        if self.start_time and self.end_time:
+            duration = self.end_time - self.start_time
+            return round(duration.total_seconds() / 3600, 2)
+        return self.hours_worked
+
+    def to_dict(self):
+        """Convert to dictionary"""
+        return {
+            "id": self.id,
+            "worker_name": self.worker_name,
+            "work_date": self.work_date.isoformat() if self.work_date else None,
+            "start_time": self.start_time.isoformat() if self.start_time else None,
+            "end_time": self.end_time.isoformat() if self.end_time else None,
+            "hours_worked": self.hours_worked,
+            "tasks_completed": self.tasks_completed,
+            "blog_posts_count": self.blog_posts_count,
+            "productivity_score": self.productivity_score,
+            "notes": self.notes,
+            "work_duration_hours": self.calculate_work_duration_hours(),
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None
+        }
+
+
+class DailyReport(Base):
+    __tablename__ = "daily_reports"
+
+    id = Column(Integer, primary_key=True, index=True)
+    worker_name = Column(String(100), nullable=False, index=True)
+    report_date = Column(Date, nullable=False, index=True)
+    total_hours = Column(Float, nullable=False)
+    total_tasks = Column(Integer, default=0)
+    total_blog_posts = Column(Integer, default=0)
+    avg_productivity = Column(Float, nullable=True)
+    summary = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    def __repr__(self):
+        return f"<DailyReport(id={self.id}, worker='{self.worker_name}', date='{self.report_date}')>"
+
+
+class WorkerProfile(Base):
+    __tablename__ = "worker_profiles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    worker_name = Column(String(100), unique=True, nullable=False, index=True)
+    email = Column(String(255), unique=True, nullable=True)
+    department = Column(String(100), nullable=True)
+    role = Column(String(100), nullable=True)
+    hire_date = Column(Date, nullable=True)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    def __repr__(self):
+        return f"<WorkerProfile(id={self.id}, name='{self.worker_name}')>"
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "worker_name": self.worker_name,
+            "email": self.email,
+            "department": self.department,
+            "role": self.role,
+            "hire_date": self.hire_date.isoformat() if self.hire_date else None,
+            "is_active": self.is_active,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None
+        }
+
